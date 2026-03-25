@@ -8,6 +8,7 @@
 #include <termios.h>
 #include <thread>
 #include <unistd.h>
+#include "SentenceFetcher.h"
 
 constexpr uint16_t GAME_SESSION_DURATION_IN_SECONDS = 5;
 constexpr uint16_t LOOP_SLEEP_DURATION_IN_MILLISECONDS = 5;
@@ -21,9 +22,13 @@ int main()
 
     const Output::IOutput &outout = Output::TerminalOutput();
     const Input::IInput &input = Input::TerminalInput();
-
     Colors::ColorCodes color_codes;
     Colors::Color red_color = Colors::Color(color_codes.RED);
+
+    Sentences::SentenceFetcher sentence_fetcher;
+    std::string target_sentence {};
+    sentence_fetcher.get_sentence(target_sentence);
+    std::cout << "Try to write: " << target_sentence << std::endl;
 
     const std::chrono::seconds duration(GAME_SESSION_DURATION_IN_SECONDS);
     std::chrono::steady_clock::time_point start_time = std::chrono::steady_clock::now();
