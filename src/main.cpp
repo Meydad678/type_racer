@@ -41,6 +41,5 @@ int main()
     }
 
     std::cout << "Loop finished after time duration." << std::endl;
-
     return EXIT_SUCCESS;
 }

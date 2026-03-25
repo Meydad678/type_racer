@@ -19,6 +19,11 @@ class IOutput
      * @return The appropriate error code.
      */
     virtual EOutputErrorCodes render(std::string message, Colors::Color color) const = 0;
+
+    /**
+     * @brief This function clears the screen.
+     */
+    virtual EOutputErrorCodes clear_screen() const = 0;
 };
 
 }; // namespace Output
