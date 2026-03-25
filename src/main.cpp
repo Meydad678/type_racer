@@ -46,5 +46,6 @@ int main()
     }
 
     std::cout << "Loop finished after time duration." << std::endl;
+    outout.clear_screen();
     return EXIT_SUCCESS;
 }

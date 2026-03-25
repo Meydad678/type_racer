@@ -1,3 +1,5 @@
+#pragma once
+
 #include "SentenceFetcherError.h"
 #include <cstdint>
 #include <gtest/gtest_prod.h>
