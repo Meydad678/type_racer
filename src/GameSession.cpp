@@ -22,8 +22,8 @@ EGameSessionErrorCode GameSession::run()
     std::vector<Letters::Letter> letters = initialize_letters_vector(target_sentence);
     std::vector<Letters::Letter> previous_sentence{};
 
-    // const std::chrono::seconds duration(GAME_SESSION_DURATION_IN_SECONDS);
-    const std::chrono::seconds duration(50);
+    const std::chrono::seconds duration(GAME_SESSION_DURATION_IN_SECONDS);
+    // const std::chrono::seconds duration(50);
     std::chrono::steady_clock::time_point start_time = std::chrono::steady_clock::now();
     uint16_t index = 0;
 
