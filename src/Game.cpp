@@ -2,7 +2,7 @@
 
 namespace Game
 {
-Game::Game(/* args */) {}
+Game::Game() {}
 
 Game::~Game() {}
 
@@ -11,6 +11,7 @@ EGameErrorCode Game::run()
 
     const Output::IOutput &output = Output::TerminalOutput();
     const Input::IInput &input = Input::TerminalInput();
+
     const Assessment::IRuleAssessor &assessor = Assessment::LetterAssessor{};
     Sentences::SentenceFetcher sentence_fetcher;
 
@@ -24,8 +25,7 @@ EGameErrorCode Game::run()
     while (true)
     {
         output.render(DOES_USER_WISH_TO_START_SESSION_MESSAGE, DEFAULT_COLOR);
-
-        input_error_code = input.get_char(input_char); // todo make it that it requires enter.
+        input_error_code = input.get_confirmed_char(input_char);
         if (input_error_code != Input::EInputErrorCodes::SUCCESS)
         {
             return EGameErrorCode::FAILURE;

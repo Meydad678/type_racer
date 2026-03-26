@@ -1,6 +1,9 @@
 #include "TerminalInput.h"
 #include "EInputErrorCodes.h"
-Input::TerminalInput::TerminalInput()
+Input::TerminalInput::TerminalInput() { enable_instant_key_input(); }
+Input::TerminalInput::~TerminalInput() { disable_instant_key_input(); }
+
+void Input::TerminalInput::enable_instant_key_input() const
 {
     struct termios old_terminal_io_settings, new_terminal_io_settings;
 
@@ -18,13 +21,11 @@ Input::TerminalInput::TerminalInput()
 
     m_old_terminal_io_settings = old_terminal_io_settings;
 }
-
-Input::TerminalInput::~TerminalInput()
+void Input::TerminalInput::disable_instant_key_input() const
 {
     /* Restore the terminal settings to the regular ones.*/
     tcsetattr(STDIN_FILENO, TCSANOW, &m_old_terminal_io_settings);
 }
-
 Input::EInputErrorCodes Input::TerminalInput::get_char(unsigned char &o_character) const
 {
     o_character = getchar();
@@ -33,4 +34,26 @@ Input::EInputErrorCodes Input::TerminalInput::get_char(unsigned char &o_characte
         return Input::EInputErrorCodes::FAILURE;
     }
     return Input::EInputErrorCodes::SUCCESS;
+}
+
+Input::EInputErrorCodes Input::TerminalInput::get_confirmed_char(unsigned char &o_character) const
+{
+    Input::TerminalInput::disable_instant_key_input();
+    o_character = getchar();
+    clear_stdin();
+    Input::TerminalInput::enable_instant_key_input();
+
+    if (o_character == EOF)
+    {
+        return Input::EInputErrorCodes::FAILURE;
+    }
+    return Input::EInputErrorCodes::SUCCESS;
+}
+
+void Input::TerminalInput::clear_stdin() const
+{
+    int c;
+    while ((c = getchar()) != '\n' && c != EOF)
+    {
+    }
 }

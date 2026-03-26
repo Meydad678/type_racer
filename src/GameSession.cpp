@@ -8,7 +8,7 @@ GameSession::GameSession(const Output::IOutput &output, const Input::IInput &inp
     : m_output{output}, m_input{input}, m_assessor{assessor}, m_sentence_fetcher{sentence_fetcher}
 {
 }
-
+// TODO make the unique pointers work.
 GameSession::~GameSession() {}
 
 EGameSessionErrorCode GameSession::run()
