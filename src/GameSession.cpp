@@ -33,7 +33,7 @@ EGameSessionErrorCode GameSession::run()
 
     while (std::chrono::steady_clock::now() - start_time < duration)
     {
-        // m_output.clear_screen();
+        m_output.clear_screen();
 
         if (is_fully_typed(letters))
         {
@@ -44,7 +44,7 @@ EGameSessionErrorCode GameSession::run()
         }
 
         render_letters(previous_sentence);
-        std::cout << std::endl; // todo output.newline()
+        m_output.make_new_line();
         render_letters(letters);
 
         input_error_code = m_input.get_char(input_char);
@@ -74,7 +74,7 @@ EGameSessionErrorCode GameSession::update_letters(Letters::Letter letter, uint16
                                                   std::vector<Letters::Letter> &letters,
                                                   bool &is_currently_extra)
 {
-    printf("\nstate: %d\n", letter.state);
+    printf("\nstate: %d\n", letter.state); // for debug
     if (letter.state == Assessment::LetterState::ERROR)
     {
         return EGameSessionErrorCode::FAILURE;
@@ -82,7 +82,7 @@ EGameSessionErrorCode GameSession::update_letters(Letters::Letter letter, uint16
 
     if (letter.state == Assessment::LetterState::CORRECT)
     {
-        if (is_currently_extra)
+        if (is_currently_extra) // may not be relevant
         {
             if (letter.character == BLANK_SPACE)
             {

@@ -6,9 +6,9 @@
 #include <iostream>
 #include <string>
 
+
 namespace Output
 {
-
 class TerminalOutput : public IOutput
 {
   public:
@@ -20,6 +20,13 @@ class TerminalOutput : public IOutput
      * @see IOutput for more detail.
      */
     EOutputErrorCodes render(std::string message, Colors::Color color) const override;
+
+    /**
+     * @brief This function makes a new line on the screen.
+     *
+     * @return The appropriate error code.
+     */
+    EOutputErrorCodes make_new_line() const override;
 
     /**
      * @brief This function clears the screen.

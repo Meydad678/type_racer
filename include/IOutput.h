@@ -21,6 +21,13 @@ class IOutput
     virtual EOutputErrorCodes render(std::string message, Colors::Color color) const = 0;
 
     /**
+     * @brief This function makes a new line on the screen.
+     *
+     * @return The appropriate error code.
+     */
+    virtual EOutputErrorCodes make_new_line() const = 0;
+    
+    /**
      * @brief This function clears the screen.
      */
     virtual EOutputErrorCodes clear_screen() const = 0;
