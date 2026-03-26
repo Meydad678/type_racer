@@ -19,6 +19,7 @@
 namespace Game
 {
 
+// The game session supports up until 65536 letters in one sentence.
 class GameSession
 {
   private:
@@ -26,8 +27,11 @@ class GameSession
     static constexpr uint16_t LOOP_SLEEP_DURATION_IN_MILLISECONDS = 5;
     static constexpr uint16_t NUMBER_OF_CHARS_IN_ONE_LETTER = 1;
     static constexpr unsigned char DEFAULT_INPUT_CHAR = EOF;
+    static constexpr unsigned char BLANK_SPACE = ' ';
     static constexpr Assessment::LetterState DEFAULT_LETTER_STATE =
         Assessment::LetterState::UNTYPED;
+
+    Letters::Letter BLANK_SPACE_LETTER{DEFAULT_LETTER_STATE, BLANK_SPACE};
     Colors::ColorCodes color_codes;
     Colors::Color DEFAULT_COLOR{color_codes.RESET};
 
@@ -57,6 +61,23 @@ class GameSession
      * @return the appropiate error code.
      */
     EGameSessionErrorCode render_letters(std::vector<Letters::Letter> letters);
+
+    /**
+     * @brief this function update the letters vector according to the inputted letter.
+     *        It changes the state of the letters:
+     *        If skipped, then all of the letters that were skipped will be updated.
+     *        If extra, then the letters will be updated that the blank space wont be overwriten.
+     *
+     * @param letter - the entered letter
+     * @param index - the index of the current letter in the letters vector. Will be changed.
+     * @param letters - the letters vector. Will be changed.
+     * @param is_currently_extra - a flag that signals if we are currently on extra. If so we are
+     * waiting until a blank space is entered and then making the index bigger.
+     * @return the appropiate error code.
+     */
+    EGameSessionErrorCode update_letters(Letters::Letter letter, uint16_t &index,
+                                         std::vector<Letters::Letter> &letters,
+                                         bool &is_currently_extra);
 
   public:
     GameSession(const Output::IOutput &output, const Input::IInput &input,

@@ -15,6 +15,7 @@ EGameSessionErrorCode GameSession::run()
 {
     unsigned char input_char = DEFAULT_INPUT_CHAR;
     Input::EInputErrorCodes input_error_code = Input::EInputErrorCodes::FAILURE;
+    Game::EGameSessionErrorCode session_error_code = Game::EGameSessionErrorCode::FAILURE;
 
     std::string target_sentence{};
     m_sentence_fetcher.get_sentence(target_sentence);
@@ -26,12 +27,13 @@ EGameSessionErrorCode GameSession::run()
     // const std::chrono::seconds duration(50);
     std::chrono::steady_clock::time_point start_time = std::chrono::steady_clock::now();
     uint16_t index = 0;
+    bool is_currently_extra = false;
 
     m_output.clear_screen();
 
     while (std::chrono::steady_clock::now() - start_time < duration)
     {
-        m_output.clear_screen();
+        // m_output.clear_screen();
 
         if (is_fully_typed(letters))
         {
@@ -50,12 +52,17 @@ EGameSessionErrorCode GameSession::run()
         {
             return EGameSessionErrorCode::FAILURE;
         }
+
         unsigned char expected_char = target_sentence[index];
         Assessment::LetterState state = m_assessor.assess(expected_char, input_char);
 
-        letters[index] = {state, input_char};
+        session_error_code =
+            update_letters({state, input_char}, index, letters, is_currently_extra);
+        if (session_error_code != Game::EGameSessionErrorCode::SUCCESS)
+        {
+            return session_error_code;
+        }
 
-        index++;
         std::this_thread::sleep_for(std::chrono::milliseconds(LOOP_SLEEP_DURATION_IN_MILLISECONDS));
     }
 
@@ -63,6 +70,49 @@ EGameSessionErrorCode GameSession::run()
     return EGameSessionErrorCode::SUCCESS;
 }
 
+EGameSessionErrorCode GameSession::update_letters(Letters::Letter letter, uint16_t &index,
+                                                  std::vector<Letters::Letter> &letters,
+                                                  bool &is_currently_extra)
+{
+    printf("\nstate: %d\n", letter.state);
+    if (letter.state == Assessment::LetterState::ERROR)
+    {
+        return EGameSessionErrorCode::FAILURE;
+    }
+
+    if (letter.state == Assessment::LetterState::CORRECT)
+    {
+        if (is_currently_extra)
+        {
+            if (letter.character == BLANK_SPACE)
+            {
+                index += 2;
+            }
+        }
+        else
+        {
+            letters[index] = letter;
+            index++;
+        }
+    }
+    if (letter.state == Assessment::LetterState::INCORRECT)
+    {
+        letters[index] = letter;
+        index++;
+    }
+    if (letter.state == Assessment::LetterState::EXTRA)
+    {
+        letters.insert(letters.begin() + index, letter);
+        index += 1;
+        // todo the problem is that we dont update the expected value, even though we should.
+    }
+
+    if (letter.state == Assessment::LetterState::SKIPPED)
+    {
+    }
+    std::cout << index;
+    return EGameSessionErrorCode::SUCCESS;
+}
 std::vector<Letters::Letter> GameSession::initialize_letters_vector(std::string &sentence)
 {
     std::vector<Letters::Letter> letters = {};

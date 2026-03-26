@@ -40,9 +40,9 @@ TEST_F(UTRuleAssessor,
     EXPECT_EQ(LetterState::EXTRA, assessor->assess(BLANK_SPACE, NON_BLANK_LETTER1));
 }
 TEST_F(UTRuleAssessor,
-       assess_returns_missing_when_expected_is_non_blank_space_and_reality_is_blank_space)
+       assess_returns_skipped_when_expected_is_non_blank_space_and_reality_is_blank_space)
 {
-    EXPECT_EQ(LetterState::MISSING, assessor->assess(NON_BLANK_LETTER1, BLANK_SPACE));
+    EXPECT_EQ(LetterState::SKIPPED, assessor->assess(NON_BLANK_LETTER1, BLANK_SPACE));
 }
 TEST_F(UTRuleAssessor,
        assess_returns_incorrect_when_expected_and_reality_are_non_blank_spaces_and_diffrent)

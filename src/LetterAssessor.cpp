@@ -1,8 +1,11 @@
 #include "LetterAssessor.h"
+#include "iostream"
 
 Assessment::LetterState Assessment::LetterAssessor::assess(unsigned char expected,
                                                            unsigned char reality) const
 {
+    std::cout << "Expected: " << expected << ", Reality: " << reality << "\n";
+
     if (expected == Assessment::LetterAssessor::NO_ENTRY)
     {
         return Assessment::LetterState::ERROR;
@@ -18,12 +21,13 @@ Assessment::LetterState Assessment::LetterAssessor::assess(unsigned char expecte
     if (expected == Assessment::LetterAssessor::BLANK_SPACE &&
         reality != Assessment::LetterAssessor::BLANK_SPACE)
     {
+
         return Assessment::LetterState::EXTRA;
     }
     if (expected != Assessment::LetterAssessor::BLANK_SPACE &&
         reality == Assessment::LetterAssessor::BLANK_SPACE)
     {
-        return Assessment::LetterState::MISSING;
+        return Assessment::LetterState::SKIPPED;
     }
     return Assessment::LetterState::INCORRECT;
 }
@@ -45,8 +49,8 @@ bool Assessment::LetterAssessor::state_to_color(Assessment::LetterState state,
     case Assessment::LetterState::EXTRA:
         o_color = Assessment::LetterAssessor::COLOR_OF_EXTRA;
         return true;
-    case Assessment::LetterState::MISSING:
-        o_color = Assessment::LetterAssessor::COLOR_OF_MISSING;
+    case Assessment::LetterState::SKIPPED:
+        o_color = Assessment::LetterAssessor::COLOR_OF_SKIPPED;
         return true;
     case Assessment::LetterState::ERROR:
         o_color = Assessment::LetterAssessor::COLOR_OF_ERROR;

@@ -7,7 +7,7 @@ enum class LetterState
     CORRECT,
     INCORRECT,
     EXTRA,
-    MISSING,
+    SKIPPED,
     ERROR
 };
 };
