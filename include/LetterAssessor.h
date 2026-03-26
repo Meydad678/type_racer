@@ -1,7 +1,7 @@
 #pragma once
 
 #include "IRuleAssessor.h"
-
+#include "ColorCodes.h"
 namespace Assessment
 {
 class LetterAssessor : public IRuleAssessor
@@ -12,7 +12,8 @@ class LetterAssessor : public IRuleAssessor
     const Colors::Color COLOR_OF_INCORRECT = Colors::Color{color_codes.RED};
     const Colors::Color COLOR_OF_UNTYPED = Colors::Color{color_codes.RESET};
     const Colors::Color COLOR_OF_EXTRA = Colors::Color{color_codes.BOLDRED};
-    const Colors::Color COLOR_OF_MISSING = Colors::Color{color_codes.BOLDBLACK};
+    const Colors::Color COLOR_OF_MISSING = Colors::Color{color_codes.UNDERLINE};
+    // const Colors::Color COLOR_OF_MISSING = Colors::Color{color_codes.BOLDBLACK};
     const Colors::Color COLOR_OF_ERROR = Colors::Color{color_codes.BOLDMAGENTA};
 
     static constexpr unsigned char NO_ENTRY = __UINT8_MAX__;

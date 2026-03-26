@@ -20,5 +20,7 @@ struct ColorCodes
     const std::string BOLDMAGENTA = "\033[1m\033[35m";
     const std::string BOLDCYAN    = "\033[1m\033[36m";
     const std::string BOLDWHITE   = "\033[1m\033[37m";
+    const std::string UNDERLINE     = "\033[4m";
+    const std::string BOLDUNDERLINE = "\033[1;4m";
 };
 }; // namespace Colors
