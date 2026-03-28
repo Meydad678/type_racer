@@ -8,7 +8,7 @@ GameSession::GameSession(const Output::IOutput &output, const Input::IInput &inp
     : m_output{output}, m_input{input}, m_assessor{assessor}, m_sentence_fetcher{sentence_fetcher}
 {
 }
-// TODO make the unique pointers work.
+
 GameSession::~GameSession() {}
 
 EGameSessionErrorCode GameSession::run()
@@ -23,28 +23,30 @@ EGameSessionErrorCode GameSession::run()
     std::vector<Letters::Letter> letters = initialize_letters_vector(target_sentence);
     std::vector<Letters::Letter> previous_sentence{};
 
-    const std::chrono::seconds duration(GAME_SESSION_DURATION_IN_SECONDS);
-    // const std::chrono::seconds duration(50);
+    // const std::chrono::seconds duration(GAME_SESSION_DURATION_IN_SECONDS);
+    const std::chrono::seconds duration(40);
     std::chrono::steady_clock::time_point start_time = std::chrono::steady_clock::now();
-    uint16_t index = 0;
+    uint16_t target_sentence_index = 0;
+    uint16_t reality_sentence_index = 0;
     bool is_currently_extra = false;
 
     m_output.clear_screen();
 
     while (std::chrono::steady_clock::now() - start_time < duration)
     {
-        m_output.clear_screen();
+        // m_output.clear_screen();
 
         if (is_fully_typed(letters))
         {
             previous_sentence = letters;
             m_sentence_fetcher.get_sentence(target_sentence);
             letters = initialize_letters_vector(target_sentence);
-            index = 0;
+            target_sentence_index = 0;
+            reality_sentence_index = 0;
         }
 
         render_letters(previous_sentence);
-        m_output.make_new_line();
+        std::cout << std::endl; // todo output.newline()
         render_letters(letters);
 
         input_error_code = m_input.get_char(input_char);
@@ -53,11 +55,11 @@ EGameSessionErrorCode GameSession::run()
             return EGameSessionErrorCode::FAILURE;
         }
 
-        unsigned char expected_char = target_sentence[index];
+        unsigned char expected_char = target_sentence[target_sentence_index];
         Assessment::LetterState state = m_assessor.assess(expected_char, input_char);
 
-        session_error_code =
-            update_letters({state, input_char}, index, letters, is_currently_extra);
+        session_error_code = update_letters({state, input_char}, target_sentence_index,
+                                            reality_sentence_index, letters);
         if (session_error_code != Game::EGameSessionErrorCode::SUCCESS)
         {
             return session_error_code;
@@ -70,47 +72,38 @@ EGameSessionErrorCode GameSession::run()
     return EGameSessionErrorCode::SUCCESS;
 }
 
-EGameSessionErrorCode GameSession::update_letters(Letters::Letter letter, uint16_t &index,
-                                                  std::vector<Letters::Letter> &letters,
-                                                  bool &is_currently_extra)
+EGameSessionErrorCode GameSession::update_letters(Letters::Letter letter,
+                                                  uint16_t &target_sentence_index,
+                                                  uint16_t &reality_sentece_index,
+                                                  std::vector<Letters::Letter> &letters)
 {
-    printf("\nstate: %d\n", letter.state); // for debug
-    if (letter.state == Assessment::LetterState::ERROR)
+    printf("\nstate: %d\n", letter.state);
+    switch (letter.state)
     {
+    case Assessment::LetterState::ERROR:
         return EGameSessionErrorCode::FAILURE;
-    }
+    case Assessment::LetterState::CORRECT:
+        letters[reality_sentece_index] = letter;
+        target_sentence_index++;
+        reality_sentece_index++;
+        break;
 
-    if (letter.state == Assessment::LetterState::CORRECT)
-    {
-        if (is_currently_extra) // may not be relevant
-        {
-            if (letter.character == BLANK_SPACE)
-            {
-                index += 2;
-            }
-        }
-        else
-        {
-            letters[index] = letter;
-            index++;
-        }
-    }
-    if (letter.state == Assessment::LetterState::INCORRECT)
-    {
-        letters[index] = letter;
-        index++;
-    }
-    if (letter.state == Assessment::LetterState::EXTRA)
-    {
-        letters.insert(letters.begin() + index, letter);
-        index += 1;
-        // todo the problem is that we dont update the expected value, even though we should.
-    }
+    case Assessment::LetterState::INCORRECT:
+        letters[reality_sentece_index] = letter;
+        target_sentence_index++;
+        reality_sentece_index++;
+        break;
 
-    if (letter.state == Assessment::LetterState::SKIPPED)
-    {
+    case Assessment::LetterState::EXTRA:
+        letters.insert(letters.begin() + reality_sentece_index, letter);
+        reality_sentece_index++;
+        break;
+    case Assessment::LetterState::SKIPPED:
+        // TODO
+        break;
+    default:
+        break;
     }
-    std::cout << index;
     return EGameSessionErrorCode::SUCCESS;
 }
 std::vector<Letters::Letter> GameSession::initialize_letters_vector(std::string &sentence)

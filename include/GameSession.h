@@ -69,15 +69,17 @@ class GameSession
      *        If extra, then the letters will be updated that the blank space wont be overwriten.
      *
      * @param letter - the entered letter
-     * @param index - the index of the current letter in the letters vector. Will be changed.
-     * @param letters - the letters vector. Will be changed.
-     * @param is_currently_extra - a flag that signals if we are currently on extra. If so we are
-     * waiting until a blank space is entered and then making the index bigger.
+     * @param target_sentnece_index - the index of the current letter in the reality letters vector.
+     * Will be affected by this method.
+     * @param reality_sentece_index - the index of the current target letter in the target sentence.
+     * Will be affected by this method.
+     * @param letters - the letters vector. Will be affected by this method.
+     *
      * @return the appropiate error code.
      */
-    EGameSessionErrorCode update_letters(Letters::Letter letter, uint16_t &index,
-                                         std::vector<Letters::Letter> &letters,
-                                         bool &is_currently_extra);
+    EGameSessionErrorCode update_letters(Letters::Letter letter, uint16_t &target_sentnece_index,
+                                         uint16_t &reality_sentece_index,
+                                         std::vector<Letters::Letter> &letters);
 
   public:
     GameSession(const Output::IOutput &output, const Input::IInput &input,
