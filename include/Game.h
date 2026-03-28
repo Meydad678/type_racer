@@ -17,6 +17,7 @@ namespace Game
 class Game
 {
   private:
+    static constexpr uint16_t GAME_SESSION_DURATION_IN_SECONDS = 25;
     static constexpr unsigned char DEFAULT_INPUT_CHAR = EOF;
     static constexpr unsigned char USER_WISHES_TO_CONTINUE_CHARACTER = 'Y';
     std::string DOES_USER_WISH_TO_START_SESSION_MESSAGE =

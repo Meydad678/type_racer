@@ -9,6 +9,7 @@
 #include "SentenceFetcher.h"
 #include "TerminalInput.h"
 #include "TerminalOutput.h"
+#include <algorithm>
 #include <chrono>
 #include <iostream>
 #include <stdio.h>
@@ -23,11 +24,14 @@ namespace Game
 class GameSession
 {
   private:
-    static constexpr uint16_t GAME_SESSION_DURATION_IN_SECONDS = 5;
     static constexpr uint16_t LOOP_SLEEP_DURATION_IN_MILLISECONDS = 5;
     static constexpr uint16_t NUMBER_OF_CHARS_IN_ONE_LETTER = 1;
     static constexpr unsigned char DEFAULT_INPUT_CHAR = EOF;
     static constexpr unsigned char BLANK_SPACE = ' ';
+    static constexpr unsigned char ILLEGAL_CHARACTER = 9;
+    static constexpr unsigned char UNDO_LAST_ACTION_1 = 127;
+    static constexpr unsigned char UNDO_LAST_ACTION_2 = 8;
+
     static constexpr Assessment::LetterState DEFAULT_LETTER_STATE =
         Assessment::LetterState::UNTYPED;
 
@@ -39,6 +43,7 @@ class GameSession
     const Input::IInput &m_input;
     const Assessment::IRuleAssessor &m_assessor;
     Sentences::SentenceFetcher m_sentence_fetcher;
+    uint16_t m_session_duration;
 
     /**
      * @brief This function initializes the letters vector.
@@ -53,38 +58,59 @@ class GameSession
     /**
      * @brief iterates over the vector and returns if one of the letters' state is UNTYPED.
      */
-    bool is_fully_typed(std::vector<Letters::Letter> &letters);
+    static bool is_fully_typed(std::vector<Letters::Letter> &letters);
 
     /**
      * @brief this function iterates over the vector and renders the letters.
      *
      * @return the appropiate error code.
      */
-    EGameSessionErrorCode render_letters(std::vector<Letters::Letter> letters);
+    EGameSessionErrorCode render_letters(std::vector<Letters::Letter> letters) const;
+
+    /**
+     * @brief makes the values of it's 2 params bigger by 1.
+     */
+    static inline void advance_indexes(uint16_t &target, uint16_t &reality);
 
     /**
      * @brief this function update the letters vector according to the inputted letter.
      *        It changes the state of the letters:
      *        If skipped, then all of the letters that were skipped will be updated.
-     *        If extra, then the letters will be updated that the blank space wont be overwriten.
+     *        If extra, then the letters will be updated that the blank space wont be
+     * overwriten.
      *
-     * @param letter - the entered letter
-     * @param target_sentnece_index - the index of the current letter in the reality letters vector.
-     * Will be affected by this method.
-     * @param reality_sentece_index - the index of the current target letter in the target sentence.
-     * Will be affected by this method.
+     * @param entered_letter - the entered letter
+     * @param target_sentnece_index - the index of the current letter in the reality letters
+     * vector. Will be affected by this method.
+     * @param reality_sentece_index - the index of the current target letter in the target
+     * sentence. Will be affected by this method.
      * @param letters - the letters vector. Will be affected by this method.
      *
      * @return the appropiate error code.
      */
-    EGameSessionErrorCode update_letters(Letters::Letter letter, uint16_t &target_sentnece_index,
+    EGameSessionErrorCode update_letters(Letters::Letter entered_letter,
+                                         uint16_t &target_sentnece_index,
                                          uint16_t &reality_sentece_index,
                                          std::vector<Letters::Letter> &letters);
+    /**
+     * @brief scans for iilegal characters.
+     * 
+     * @returns if the char is legal.
+     */
+    bool is_legal_character(char character);
+
+    /**
+     * @brief Fetches a new sentence and updates all the paramaters accordingly.
+     */
+    void initialize_new_sentence(std::vector<Letters::Letter> &previous_sentence,
+                                 std::vector<Letters::Letter> &letters,
+                                 std::string &target_sentence, uint16_t &target_sentence_index,
+                                 uint16_t &reality_sentence_index);
 
   public:
     GameSession(const Output::IOutput &output, const Input::IInput &input,
                 const Assessment::IRuleAssessor &assessor,
-                Sentences::SentenceFetcher &sentence_fetcher);
+                Sentences::SentenceFetcher &sentence_fetcher, uint16_t session_duration);
     ~GameSession();
 
     /**

@@ -4,8 +4,9 @@ namespace Game
 {
 GameSession::GameSession(const Output::IOutput &output, const Input::IInput &input,
                          const Assessment::IRuleAssessor &assessor,
-                         Sentences::SentenceFetcher &sentence_fetcher)
-    : m_output{output}, m_input{input}, m_assessor{assessor}, m_sentence_fetcher{sentence_fetcher}
+                         Sentences::SentenceFetcher &sentence_fetcher, uint16_t session_duration)
+    : m_output{output}, m_input{input}, m_assessor{assessor}, m_sentence_fetcher{sentence_fetcher},
+      m_session_duration{session_duration}
 {
 }
 
@@ -23,8 +24,7 @@ EGameSessionErrorCode GameSession::run()
     std::vector<Letters::Letter> letters = initialize_letters_vector(target_sentence);
     std::vector<Letters::Letter> previous_sentence{};
 
-    // const std::chrono::seconds duration(GAME_SESSION_DURATION_IN_SECONDS);
-    const std::chrono::seconds duration(40);
+    const std::chrono::seconds duration(m_session_duration);
     std::chrono::steady_clock::time_point start_time = std::chrono::steady_clock::now();
     uint16_t target_sentence_index = 0;
     uint16_t reality_sentence_index = 0;
@@ -34,19 +34,16 @@ EGameSessionErrorCode GameSession::run()
 
     while (std::chrono::steady_clock::now() - start_time < duration)
     {
-        // m_output.clear_screen();
+        m_output.clear_screen();
 
         if (is_fully_typed(letters))
         {
-            previous_sentence = letters;
-            m_sentence_fetcher.get_sentence(target_sentence);
-            letters = initialize_letters_vector(target_sentence);
-            target_sentence_index = 0;
-            reality_sentence_index = 0;
+            initialize_new_sentence(previous_sentence, letters, target_sentence,
+                                    target_sentence_index, reality_sentence_index);
         }
 
         render_letters(previous_sentence);
-        std::cout << std::endl; // todo output.newline()
+        m_output.make_new_line();
         render_letters(letters);
 
         input_error_code = m_input.get_char(input_char);
@@ -68,44 +65,91 @@ EGameSessionErrorCode GameSession::run()
         std::this_thread::sleep_for(std::chrono::milliseconds(LOOP_SLEEP_DURATION_IN_MILLISECONDS));
     }
 
-    m_output.render("\nTime is up!", DEFAULT_COLOR);
+    m_output.render("\nTime is up!\n", DEFAULT_COLOR);
     return EGameSessionErrorCode::SUCCESS;
 }
 
-EGameSessionErrorCode GameSession::update_letters(Letters::Letter letter,
+void GameSession::initialize_new_sentence(std::vector<Letters::Letter> &previous_sentence,
+                                          std::vector<Letters::Letter> &letters,
+                                          std::string &target_sentence,
+                                          uint16_t &target_sentence_index,
+                                          uint16_t &reality_sentence_index)
+{
+    previous_sentence = letters;
+    m_sentence_fetcher.get_sentence(target_sentence);
+    letters = initialize_letters_vector(target_sentence);
+    target_sentence_index = 0;
+    reality_sentence_index = 0;
+}
+
+inline void GameSession::advance_indexes(uint16_t &target, uint16_t &reality)
+{
+    target++;
+    reality++;
+}
+
+EGameSessionErrorCode GameSession::update_letters(Letters::Letter entered_letter,
                                                   uint16_t &target_sentence_index,
                                                   uint16_t &reality_sentece_index,
                                                   std::vector<Letters::Letter> &letters)
 {
-    printf("\nstate: %d\n", letter.state);
-    switch (letter.state)
+    if (entered_letter.state == Assessment::LetterState::ERROR)
     {
-    case Assessment::LetterState::ERROR:
         return EGameSessionErrorCode::FAILURE;
+    }
+    if (!is_legal_character(entered_letter.character))
+    {
+        return EGameSessionErrorCode::SUCCESS;
+    }
+
+    if (entered_letter.character == UNDO_LAST_ACTION_1 ||
+        entered_letter.character == UNDO_LAST_ACTION_2)
+    {
+        // TODO make it able to go back sentences
+        if (reality_sentece_index > 0 && target_sentence_index > 0)
+        {
+            target_sentence_index--;
+            reality_sentece_index--;
+            letters[reality_sentece_index].state = Assessment::LetterState::UNTYPED;
+        }
+        return EGameSessionErrorCode::SUCCESS;
+    }
+    switch (entered_letter.state)
+    {
     case Assessment::LetterState::CORRECT:
-        letters[reality_sentece_index] = letter;
-        target_sentence_index++;
-        reality_sentece_index++;
+        letters[reality_sentece_index] = entered_letter;
+        advance_indexes(target_sentence_index, reality_sentece_index);
         break;
 
     case Assessment::LetterState::INCORRECT:
-        letters[reality_sentece_index] = letter;
-        target_sentence_index++;
-        reality_sentece_index++;
+        letters[reality_sentece_index] = entered_letter;
+        advance_indexes(target_sentence_index, reality_sentece_index);
         break;
 
     case Assessment::LetterState::EXTRA:
-        letters.insert(letters.begin() + reality_sentece_index, letter);
+        letters.insert(letters.begin() + reality_sentece_index, entered_letter);
         reality_sentece_index++;
         break;
     case Assessment::LetterState::SKIPPED:
-        // TODO
+        for (uint16_t i = reality_sentece_index; i < letters.size(); i++)
+        {
+            letters[i].state = Assessment::LetterState::SKIPPED;
+            if (letters[i].character == BLANK_SPACE)
+            {
+                break;
+            }
+            advance_indexes(target_sentence_index, reality_sentece_index);
+        }
+        advance_indexes(target_sentence_index, reality_sentece_index);
         break;
     default:
         break;
     }
     return EGameSessionErrorCode::SUCCESS;
 }
+
+bool GameSession::is_legal_character(char character) { return (character != ILLEGAL_CHARACTER); }
+
 std::vector<Letters::Letter> GameSession::initialize_letters_vector(std::string &sentence)
 {
     std::vector<Letters::Letter> letters = {};
@@ -129,7 +173,7 @@ bool GameSession::is_fully_typed(std::vector<Letters::Letter> &letters)
     return true;
 }
 
-EGameSessionErrorCode GameSession::render_letters(std::vector<Letters::Letter> letters)
+EGameSessionErrorCode GameSession::render_letters(std::vector<Letters::Letter> letters) const
 {
     Colors::Color color = DEFAULT_COLOR;
     for (Letters::Letter letter : letters)

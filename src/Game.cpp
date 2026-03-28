@@ -18,7 +18,7 @@ EGameErrorCode Game::run()
     Input::EInputErrorCodes input_error_code = Input::EInputErrorCodes::FAILURE;
     EGameSessionErrorCode error_code_session = EGameSessionErrorCode::FAILURE;
 
-    GameSession session{output, input, assessor, sentence_fetcher};
+    GameSession session{output, input, assessor, sentence_fetcher, GAME_SESSION_DURATION_IN_SECONDS};
     bool another_game = false;
     unsigned char input_char = DEFAULT_INPUT_CHAR;
 
